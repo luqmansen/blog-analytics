@@ -7,6 +7,7 @@ dev:
 
 
 .PHONY: build
+build:
 	go build -o web-analytics *.go
 
 .PHONY: test

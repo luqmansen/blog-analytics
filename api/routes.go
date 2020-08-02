@@ -13,6 +13,7 @@ func Routes(h AnalyticsHandler) *chi.Mux {
 	r.Use(middleware.Recoverer)
 	r.Use(CorsMiddleware)
 	r.Use(HostValidationMiddleware)
+	r.Use(RequestThrottleMiddleware)
 
 	r.Get("/api/analytics", h.Get)
 	r.Post("/api/analytics", h.Post)

@@ -10,5 +10,6 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	go.mongodb.org/mongo-driver v1.4.0
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	gopkg.in/dealancer/validate.v2 v2.1.0
 )
