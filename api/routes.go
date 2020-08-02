@@ -11,9 +11,13 @@ func Routes(h AnalyticsHandler) *chi.Mux {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(HostValidationMiddleware)
 
 	r.Get("/api/all", h.Get)
 	r.Post("/api/analytics", h.Post)
+
+	//Health check stuff
+	r.Get("/healthz", healthz)
 
 	return r
 }

@@ -1,10 +1,12 @@
 database:
-  uri: "mongodb://localhost:27010"
+  uri: "mongodb://root:root@localhost:27017/"
   database: "analytics"
-  timeout: 1
+  timeout: 20
 
 server:
+  host: "localhost"
   port: 8080
 
-client:
+AllowedHosts:
   - "luqmansen.github.io"
+  - "localhost:8080"

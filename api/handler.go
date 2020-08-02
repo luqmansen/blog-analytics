@@ -7,6 +7,7 @@ import (
 	js "github.com/luqmansen/web-analytics/serializer/json"
 	ms "github.com/luqmansen/web-analytics/serializer/msgpack"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -47,11 +48,15 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		log.Println(err)
 	}
-	//dict := map[string]interface{}{"data": all}
+	if len(all) == 0 {
+		w.Write(nil)
+		w.WriteHeader(http.StatusNoContent)
+	}
+
 	b, err := json.Marshal(all)
 	if err != nil {
-		w.WriteHeader(500)
-		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		logrus.Error(err)
 	}
 
 	w.Write(b)
@@ -60,27 +65,41 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) Post(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
+	//fmt.Printf("%+v\n", r)
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if len(body) == 0 {
+		http.Error(w, "Empty body not allowed", http.StatusBadRequest)
 		return
 	}
 
 	analytic, err := h.serializer(contentType).Decode(body)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logrus.Error(err)
 		return
 	}
-
+	analytic.IP = r.RemoteAddr
 	err = h.analyticsService.Store(analytic)
 	if err != nil {
-		if errors.Cause(err) == analytics.ErrorInvalidURL {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		cause := errors.Cause(err)
+		if (cause == analytics.ErrorDuplicate) || (cause == analytics.ErrorInvalidURL) || (cause == analytics.ErrorInvalidHost) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		logrus.Errorln(err)
 		return
 	}
+	w.Write([]byte("Store analytics success"))
+}
 
+func healthz(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Server", "Health Check")
+	w.Write([]byte("OK"))
+	w.WriteHeader(200)
 }
