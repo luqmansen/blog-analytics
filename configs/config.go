@@ -10,9 +10,10 @@ import (
 )
 
 type Configuration struct {
-	Server       Server
-	Database     Database
-	AllowedHosts []string
+	Server         Server
+	Database       Database
+	AllowedHost    string
+	AllowedRequest []string
 }
 
 type Database struct {
@@ -40,6 +41,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	viper.SetDefault("HOST", "0.0.0.0")
+	viper.SetDefault("DEPLOY", "PROD")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -51,7 +53,7 @@ func init() {
 		logrus.Fatal(fmt.Errorf("Fatal error failed to decode to struct: %s \n", err))
 	}
 
-	if len(config.AllowedHosts) == 0 {
+	if len(config.AllowedRequest) == 0 {
 		logrus.Errorln(errors.New("valid request host not set"))
 	}
 	if viper.GetString("DEPLOY") == "PROD" {

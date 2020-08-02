@@ -42,7 +42,8 @@ Success response example
 
 **POST** ``api/analytics`` <br>
 JSON body post example
-````json 
+
+```json 
 {
 	"url": "https://luqmansen.github.io/yeetV3",
 	"info": {
@@ -56,3 +57,45 @@ JSON body post example
 	}
 }
 ```
+
+### Client-side example
+````javascript
+
+function httpGetAsync(theUrl, callback)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.send(null);
+}
+
+postData = async (data) => {
+    const payload = {
+        "url" :window.location.href,
+         "info" : JSON.parse(data)
+    }
+    const settings = {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        }
+    };
+    try {
+        const fetchResponse = await fetch(`http://localhost:8080/api/analytics`, settings);
+        const data = await fetchResponse.json();
+        return data;
+    } catch (e) {
+        return e;
+    }    
+
+}
+
+(function() {
+    httpGetAsync("https://ipinfo.io/json", postData)
+})();
+````
