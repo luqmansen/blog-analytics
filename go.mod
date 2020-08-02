@@ -9,6 +9,6 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	go.mongodb.org/mongo-driver v1.4.0
-	google.golang.org/appengine v1.6.1
+	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/dealancer/validate.v2 v2.1.0
 )

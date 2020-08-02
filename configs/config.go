@@ -12,8 +12,6 @@ import (
 type Configuration struct {
 	Server         Server
 	Database       Database
-	AllowedHost    string
-	AllowedRequest []string
 }
 
 type Database struct {
@@ -30,6 +28,8 @@ type Server struct {
 var config Configuration
 
 func init() {
+	viper.SetDefault("DEPLOY", "PROD")
+
 	if os.Getenv("DEPLOY") != "PROD" {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
@@ -41,7 +41,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	viper.SetDefault("HOST", "0.0.0.0")
-	viper.SetDefault("DEPLOY", "PROD")
+	viper.SetDefault("PORT", "8080")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -53,7 +53,7 @@ func init() {
 		logrus.Fatal(fmt.Errorf("Fatal error failed to decode to struct: %s \n", err))
 	}
 
-	if len(config.AllowedRequest) == 0 {
+	if len(viper.GetStringSlice("AllowedRequest")) == 0 {
 		logrus.Errorln(errors.New("valid request host not set"))
 	}
 	if viper.GetString("DEPLOY") == "PROD" {
