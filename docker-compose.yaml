@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   mongodb:
-    container_name: "web-analytics"
+    container_name: "mongo-web-analytics"
     image: mongo:latest
     command: [--auth]
     environment:

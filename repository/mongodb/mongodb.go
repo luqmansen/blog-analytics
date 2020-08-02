@@ -5,10 +5,12 @@ import (
 	"github.com/luqmansen/web-analytics/analytics"
 	"github.com/luqmansen/web-analytics/configs"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 	"time"
 )
 
@@ -40,6 +42,23 @@ func NewMongoRepository(m configs.Database) (analytics.AnalyticRepository, error
 	if err != nil {
 		return nil, errors.Wrap(err, "repository.mongodb.NewMongoRepository")
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(m.Timeout)*time.Second)
+	defer cancel()
+
+	coll := client.Database(m.Database).Collection("analytics")
+	idx, err := coll.Indexes().CreateOne(
+		ctx,
+		mongo.IndexModel{
+			Keys:    bsonx.Doc{{"url", bsonx.Int32(1)}, {"ip", bsonx.Int32(1)}},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logrus.Errorln(err)
+	}
+	logrus.Infof("Index %s created\n", idx)
+
 	return &mongoRepository{
 		client:   client,
 		database: m.Database,
@@ -53,12 +72,12 @@ func (m mongoRepository) GetAll() ([]*analytics.Analytic, error) {
 
 	var data []*analytics.Analytic
 
-	c := m.client.Database(m.database).Collection("analytics")
-	cur, err := c.Find(ctx, bson.D{})
+	coll := m.client.Database(m.database).Collection("analytics")
+	cur, err := coll.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, errors.Wrap(err, "repository.mongodb.GetAll")
 	}
-	if err = cur.All(ctx, data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return nil, errors.Wrap(err, "repository.mongodb.GetAll")
 	}
 	return data, nil
@@ -68,12 +87,13 @@ func (m mongoRepository) Store(analytic *analytics.Analytic) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(m.timeout)*time.Second)
 	defer cancel()
 
-	c := m.client.Database(m.database).Collection("analytics")
-	_, err := c.InsertOne(
+	coll := m.client.Database(m.database).Collection("analytics")
+	_, err := coll.InsertOne(
 		ctx,
 		bson.M{
 			"created_at": analytic.CreatedAt,
 			"url":        analytic.URL,
+			"ip":         analytic.IP,
 			"info": bson.M{
 				"ip":       analytic.Info.IP,
 				"city":     analytic.Info.City,
@@ -86,6 +106,13 @@ func (m mongoRepository) Store(analytic *analytics.Analytic) error {
 		},
 	)
 	if err != nil {
+		var merr mongo.WriteException
+		merr = err.(mongo.WriteException)
+		errCode := merr.WriteErrors[0].Code
+
+		if errCode == 11000 {
+			return errors.Wrap(analytics.ErrorDuplicate, "repository.mongodb.Store")
+		}
 		return errors.Wrap(err, "repository.mongodb.Store")
 	}
 	return nil

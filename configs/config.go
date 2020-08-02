@@ -1,9 +1,18 @@
 package configs
 
+import (
+	"errors"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"os"
+	"strings"
+)
+
 type Configuration struct {
-	Server   Server
-	Database Database
-	Client   []string
+	Server       Server
+	Database     Database
+	AllowedHosts []string
 }
 
 type Database struct {
@@ -13,9 +22,45 @@ type Database struct {
 }
 
 type Server struct {
+	Host string
 	Port string
 }
 
-type Client struct {
-	Url []string
+var config Configuration
+
+func init() {
+	if os.Getenv("DEPLOY") != "PROD" {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	viper.SetConfigName("config")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	viper.SetDefault("HOST", "0.0.0.0")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		logrus.Fatal(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		logrus.Fatal(fmt.Errorf("Fatal error failed to decode to struct: %s \n", err))
+	}
+
+	if len(config.AllowedHosts) == 0 {
+		logrus.Errorln(errors.New("valid request host not set"))
+	}
+	if viper.GetString("DEPLOY") == "PROD" {
+		config.Server.Port = viper.GetString("PORT")
+		config.Server.Host = viper.GetString("HOST")
+	}
+
+}
+
+func GetConfig() *Configuration {
+	return &config
 }
