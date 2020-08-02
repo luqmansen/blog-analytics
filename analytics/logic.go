@@ -1,8 +1,8 @@
 package analytics
 
 import (
+	"cloud.google.com/go/civil"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/dealancer/validate.v2"
 	"time"
 )
@@ -31,14 +31,18 @@ func (a analyticServices) Store(analytic *Analytic) error {
 	if err := a.Validate(analytic); err != nil {
 		return err
 	}
-	analytic.CreatedAt = time.Now().UTC()
+	// this is seems redundant, but currently stdlib
+	// not support time.Date field
+	analytic.CreatedAt = civil.DateTime{
+		Date: civil.DateOf(time.Now().UTC()),
+		Time: civil.TimeOf(time.Now().UTC()),
+	}
 	return a.analyticRepo.Store(analytic)
 }
 
 func (a analyticServices) Validate(analytic *Analytic) error {
 
 	if err := validate.Validate(*analytic); err != nil {
-		logrus.Debugln(*analytic)
 		return errors.Wrap(err, "service.Analytic.Validate")
 	}
 	return nil

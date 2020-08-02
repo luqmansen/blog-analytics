@@ -1,9 +1,9 @@
 package analytics
 
-import "time"
+import "cloud.google.com/go/civil"
 
 type Analytic struct {
-	CreatedAt time.Time `json:"created_at" bson:"created_at" msgpack:"code"`
+	CreatedAt civil.DateTime `json:"created_at" bson:"created_at" msgpack:"code"`
 	URL       string    `json:"url" bson:"url" msgpack:"url" validate:"empty=false & format=url"`
 	IP        string    `json:"ip" bson:"ip" msgpack:"ip"`
 	Info      IpInfo    `json:"info" bson:"info" msgpack:"info"`

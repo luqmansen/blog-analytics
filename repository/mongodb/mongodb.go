@@ -50,7 +50,11 @@ func NewMongoRepository(m configs.Database) (analytics.AnalyticRepository, error
 	idx, err := coll.Indexes().CreateOne(
 		ctx,
 		mongo.IndexModel{
-			Keys:    bsonx.Doc{{"url", bsonx.Int32(1)}, {"ip", bsonx.Int32(1)}},
+			Keys:    bsonx.Doc{
+				{"url", bsonx.Int32(1)},
+				{"ip", bsonx.Int32(1)},
+				{"created_at.date",  bsonx.Int32(1)},
+			},
 			Options: options.Index().SetUnique(true),
 		},
 	)

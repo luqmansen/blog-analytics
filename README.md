@@ -9,10 +9,16 @@ My domain currently expired, so I don't nice metrics from Cloudflare about traff
 - Visited URL
 - IP address
 - Visited time
-- etc
+- see json example below
+
+### What metrics could I get
+- Daily, weekly, yearly visitor counter
+- Most city / country visit
+- Basically anything
 
 ### Dev Requirement
 - go 1.14
+- MongoDB (or just use docker compose)
 - Docker
 - docker-compose
 
