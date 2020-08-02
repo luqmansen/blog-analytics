@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -31,7 +30,7 @@ func setResponse(w http.ResponseWriter, contentType string, body []byte, status 
 	w.WriteHeader(status)
 	_, err := w.Write(body)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 	}
 }
 
@@ -45,8 +44,8 @@ func (h *handler) serializer(contentType string) serializer.AnalyticSerializer {
 func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 	all, err := h.analyticsService.GetAll()
 	if err != nil {
-		w.WriteHeader(500)
-		log.Println(err)
+		logrus.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	if len(all) == 0 {
 		w.Write(nil)
@@ -55,8 +54,8 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(all)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		logrus.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	w.Write(b)
@@ -65,7 +64,6 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) Post(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
-	//fmt.Printf("%+v\n", r)
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -79,8 +77,8 @@ func (h handler) Post(w http.ResponseWriter, r *http.Request) {
 
 	analytic, err := h.serializer(contentType).Decode(body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		logrus.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	analytic.IP = r.RemoteAddr
@@ -91,7 +89,7 @@ func (h handler) Post(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		logrus.Errorln(err)
 		return
 	}

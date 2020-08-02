@@ -18,8 +18,9 @@ My domain currently expired, so I don't nice metrics from Cloudflare about traff
 
 
 ### Endpoints
-**GET** ``api/analytics`` <br>
 
+
+**GET** ``api/analytics`` <br>
 Success response example
 ```json
 [
@@ -61,6 +62,9 @@ JSON body post example
 ### Client-side example
 ````javascript
 
+// Change to your backend
+const URL = "http://localhost:8080"
+
 function httpGetAsync(theUrl, callback)
 {
     var xmlHttp = new XMLHttpRequest();
@@ -68,7 +72,7 @@ function httpGetAsync(theUrl, callback)
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
             callback(xmlHttp.responseText);
     }
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.open("GET", theUrl, true); 
     xmlHttp.send(null);
 }
 
@@ -86,7 +90,7 @@ postData = async (data) => {
         }
     };
     try {
-        const fetchResponse = await fetch(`http://localhost:8080/api/analytics`, settings);
+        const fetchResponse = await fetch(`${URL}/api/analytics`, settings);
         const data = await fetchResponse.json();
         return data;
     } catch (e) {

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/luqmansen/web-analytics/analytics"
 	"github.com/luqmansen/web-analytics/configs"
 	"github.com/spf13/viper"
@@ -15,7 +14,6 @@ func HostValidationMiddleware(next http.Handler) http.Handler {
 		if r.Method == "POST" {
 			if found := func() bool {
 				for _, i := range conf.AllowedRequest {
-					fmt.Println(i, r.Host)
 					if i == r.Host {
 						return true
 					}
